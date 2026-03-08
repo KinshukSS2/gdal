@@ -277,6 +277,7 @@ std::vector<GNMPATH> GNMGraph::KShortestPaths(GNMGFID nStartFID,
     GNMPATH aoRootPath, aoRootPathOther, aoSpurPath;
     GNMGFID nSpurNode, nVertexToDel, nEdgeToDel;
     double dfSumCost;
+    double dfRootCost = 0.0;
 
     std::map<GNMGFID, GNMStdEdge> mstEdges = m_mstEdges;
 
@@ -290,6 +291,15 @@ std::vector<GNMPATH> GNMGraph::KShortestPaths(GNMGFID nStartFID,
         {
             // Get the current node.
             nSpurNode = A[k][i].first;
+
+            // Accumulate root path cost incrementally: the root path grows
+            // by one node per iteration. For i=0 the start node has no
+            // incoming edge so cost is 0; for i>0 add the edge entering
+            // node i.
+            if (i == 0)
+                dfRootCost = 0.0;
+            else
+                dfRootCost += mstEdges[A[k][i].second].dfDirCost;
 
             // Get the root path from the 0 to the current node.
 
@@ -384,14 +394,12 @@ std::vector<GNMPATH> GNMGraph::KShortestPaths(GNMGFID nStartFID,
                 aoRootPath.insert(aoRootPath.end(), aoSpurPath.begin() + 1,
                                   aoSpurPath.end());
                 // Calculate the summary cost of the path.
-                // TODO: get the summary cost from the Dejkstra method?
-                dfSumCost = 0.0;
-                for (itR = aoRootPath.begin(); itR != aoRootPath.end(); ++itR)
+                // The root portion cost is pre-accumulated in dfRootCost,
+                // so only the spur edges are summed here.
+                dfSumCost = dfRootCost;
+                for (itR = aoSpurPath.begin() + 1; itR != aoSpurPath.end();
+                     ++itR)
                 {
-                    // TODO: check: Note, that here the current cost can not be
-                    // infinity, because every time we assign infinity costs for
-                    // edges of old paths, we anyway have the alternative edges
-                    // with non-infinity costs.
                     dfSumCost += mstEdges[itR->second].dfDirCost;
                 }
 
