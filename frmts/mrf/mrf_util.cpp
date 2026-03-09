@@ -183,6 +183,11 @@ std::ostream &operator<<(std::ostream &out, const ILIdx &t)
 void ppmWrite(const char *fname, const char *data, const ILSize &sz)
 {
     FILE *fp = fopen(fname, "wb");
+    if (fp == nullptr)
+    {
+        fprintf(stderr, "ppmWrite: failed to open file '%s'\n", /*ok*/ fname);
+        return;
+    }
     switch (sz.c)
     {
         case 4:  // Strip the alpha
